@@ -7,6 +7,7 @@ from grid import Grid
 
 class Test_IsSorted(unittest.TestCase):
     def test_grid1(self):
+        print("Is_sorted test")
         grid = Grid.grid_from_file("input/grid1.in")
         self.assertEqual(grid.is_sorted(), False)
         grid.swap((3,0), (3,1))

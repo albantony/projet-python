@@ -101,6 +101,7 @@ class Graph:
         treating=[current]
         treated=[]
         prev={}
+        #Breadth search so use of list
         while(treating!=[]):
             current=treating.pop(0)
             if current==dst:
@@ -114,6 +115,7 @@ class Graph:
         if (treating==[] and current!=dst):
             return None
         else:
+            #Backtracking from the destination to the origin
             path=[dst]
             remonte=dst
             while(remonte!=src):

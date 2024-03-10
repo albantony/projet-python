@@ -9,11 +9,22 @@ This is the grid module. It contains the Grid class and its associated methods.
 
 import random
 
-def string_to_grid(s,n,m):
+def string_to_grid(s,m,n):
+    """"Function used to convert string to matrix. Useful in BFS,A*
+    """
     res=[([0]*n) for i in range(m)]
+    s_copy=s
     for i in range(m):
         for j in range(n):
-            res[i][j]=s[i*m+j]
+            k=0
+            ss=""
+            #For matrices that have size n,m such that n*m>=10, if we have a string with only numbers and no spaces we can't differentiate
+            #Between 18 and the numbers 1 and 8 separately
+            while(s_copy[k]!=" "):
+                ss+=s_copy[k]
+                k+=1
+            s_copy=s_copy[k+1:]
+            res[i][j]=int(ss)
     return res
 
 
@@ -60,26 +71,34 @@ class Grid():
             output += f"{self.state[i]}\n"
         return output
 
-    def graphic(self,SURF):
+    def graphic(self,SURF,coords=None,coords2=None):
         #SURF is the window that we blit things on
         #Colors that will be used to render grid
         light_gray=(210,210,210)
         black=(0,0,0)
         dark_grey=(230,230,230)
+        red=(255,0,0)
         SURF.fill(light_gray)
         font=pg.font.SysFont(None,30)
         #Coordinates should be modified according to matrix shape
         #Top left coordinates of grid matrix
-        x0,y0=100,150 
+        x0,y0=200,200 
         #Bot right coordinates of grid matrix
-        x1,y1=500,250
-
+        x1,y1=x0+self.m*100,y0+self.n*100
         for j in range(self.n):  
-            for i in range(self.m):  
-                pg.draw.rect(SURF,dark_grey,[y0+(j)*(y1-y0)/(self.n-1),x0+i*(x1-x0)/(self.m-1),(y1-y0)/self.n,(x1-x0)/(self.m)])
+            for i in range(self.m): 
+                #If current swap then cell turns red
+                clr=dark_grey
+                if coords==(i,j) or coords2==(i,j):
+                    clr=red
+                #Drawing cell boxes
+                pg.draw.rect(SURF,clr,[y0+(j)*(y1-y0)/(self.n-1),x0+i*(x1-x0)/(self.m-1),(y1-y0)/self.n,(x1-x0)/(self.m)])
+                #Numbers
                 number=font.render(str(self.state[i][j]),True,black)
                 SURF.blit(number,(y0+j*(y1-y0)/(self.n-1)+(y1-y0)/(2*self.n),x0+i*(x1-x0)/(self.m-1)+(x1-x0)/(2*self.m)))
         pg.display.update()
+        #Returning useful for playable version 
+        return x0,y0,x1,y1
 
 
 
@@ -93,16 +112,17 @@ class Grid():
 
     def is_sorted(self):
         """
-        Checks is the current state of the grid is sorte and returns the answer as a boolean.
+        Checks is the current state of the grid is sorted and returns the answer as a boolean.
         """
         count=1
         for i in range(self.m):
             for j in range(self.n):
                 if count!=self.state[i][j]:
                     return False
+                count+=1
         return True
 
-    def swap(self, cell1, cell2):
+    def swap(self, cell1, cell2,forb=[]):
         """
         Implements the swap operation between two cells. Raises an exception if the swap is not allowed.
 
@@ -111,11 +131,13 @@ class Grid():
         cell1, cell2: tuple[int]
             The two cells to swap. They must be in the format (i, j) where i is the line and j the column number of the cell. 
         """
-        x1,y1=cell1
-        x2,y2=cell2
-        if abs(x1-x2)+abs(y1-y2)>1:
-            raise Exception("Impossible swap")
-        self.state[x1][y1],self.state[x2][y2]=self.state[x2][y2],self.state[x1][y1]
+        #Forb: lists of forbidden swaps
+        if (cell1,cell2) not in forb:
+            x1,y1=cell1
+            x2,y2=cell2
+            if abs(x1-x2)+abs(y1-y2)>1:
+                raise Exception("Impossible swap")
+            self.state[x1][y1],self.state[x2][y2]=self.state[x2][y2],self.state[x1][y1]
 
     def swap_seq(self, cell_pair_list):
         """
@@ -131,10 +153,12 @@ class Grid():
             self.swap(c1,c2)
     
     def grid_to_string(self):
+        """function used to convert grid to string, useful to manipulate hashable types"""
         s=""
         for i in range(self.m):
             for j in range(self.n):
-                s+=str(self.state[i][j])
+                #We add " " to avoid 2+ digit number problems
+                s+=str(self.state[i][j])+" "
         return s
 
 
@@ -149,12 +173,15 @@ class Grid():
         treated=[]
         while(treating!=[]):
             current=treating.pop(0)
-            current_matrix=Grid(self.m,self.n,string_to_grid(current,self.n,self.m))
+            current_matrix=Grid(self.m,self.n,string_to_grid(current,self.m,self.n))
+            #Searching for all possible cells
             for i in range(self.m):
                 for j in range(self.n):
+                    # Searching for all possible swaps
                     for (r1,r2) in [(1,0),(0,1)]:
                         x,y=i+r1,j+r2
                         if x in list(range(self.m)) and y in list(range(self.n)):
+                            #Deepcopy is really important to make copies independent of one another
                             new_matrix=copy.deepcopy(current_matrix)
                             new_matrix.swap((x,y),(i,j))
                             new=new_matrix.grid_to_string()

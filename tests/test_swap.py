@@ -8,10 +8,12 @@ from grid import Grid
 class Test_Swap(unittest.TestCase):
     def test_grid1(self):
         grid = Grid.grid_from_file("input/grid1.in")
+        print("Swap test")
         grid.swap((3,0), (3,1))
         self.assertEqual(grid.state, [[1, 2], [3, 4], [5, 6], [7, 8]])
 
     def test_grid1_seq(self):
+        print("Swap_seq test")
         grid = Grid.grid_from_file("input/grid1.in")
         grid.swap_seq([((3,0), (3,1)), ((3,0), (3,1))])        
         self.assertEqual(grid.state, [[1, 2], [3, 4], [5, 6], [8, 7]])
