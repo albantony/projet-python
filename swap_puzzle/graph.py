@@ -157,3 +157,5 @@ class Graph:
                     raise Exception("Format incorrect")
         return graph
 
+def test():
+    print("Hello World")
